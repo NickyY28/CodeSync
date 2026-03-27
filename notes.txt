@@ -1,0 +1,139 @@
+Folder str:
+codesync/
+├── client/                  # React + Vite
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Editor.jsx       # Monaco editor wrapper
+│   │   │   ├── FileTree.jsx     # sidebar file tabs
+│   │   │   ├── Chat.jsx         # per-room chat
+│   │   │   ├── UserCursors.jsx  # live cursor overlays
+│   │   │   └── Navbar.jsx
+│   │   ├── pages/
+│   │   │   ├── Home.jsx         # create/join room
+│   │   │   ├── Room.jsx         # main editor page
+│   │   │   └── Auth.jsx         # login / register
+│   │   ├── socket.js            # socket.io client instance
+│   │   ├── context/
+│   │   │   └── AuthContext.jsx
+│   │   └── App.jsx
+│
+├── server/
+│   ├── models/
+│   │   ├── User.js
+│   │   ├── Room.js
+│   │   └── File.js
+│   ├── routes/
+│   │   ├── auth.js              # /api/auth/register, /login
+│   │   └── rooms.js             # /api/rooms
+│   ├── middleware/
+│   │   └── authMiddleware.js    # verifies JWT
+│   ├── socket/
+│   │   └── socketHandlers.js    # all socket events live here
+│   ├── roomState.js             # in-memory Map for live sessions
+│   └── index.js                 # entry point
+
+1. Why Socket.io, not plain WebSockets?
+Plain WebSockets give you a raw connection — no rooms, no reconnection logic, no fallback. Socket.io builds on top and gives you:
+Rooms — socket.join(roomId) and io.to(roomId).emit(...) — broadcast only to users in that room, not everyone
+Auto-reconnect — if the user's internet drops for 2 seconds, Socket.io reconnects and re-joins automatically
+Fallback to HTTP long-polling — on networks that block WebSocket ports, it degrades gracefully
+Namespaces — you can separate concerns (e.g. /editor vs /chat)
+For real-time collaboration, plain WS would mean you'd rewrite all of this yourself.
+
+2. Why Monaco Editor, not CodeMirror or a <textarea>?
+Monaco is the exact engine that powers VS Code. It gives you for free: syntax highlighting for 50+ languages, bracket matching, Intellisense-style autocomplete, multiple cursors, and a clean onDidChangeModelContent event you can hook into. CodeMirror is also good but Monaco has better TypeScript support and looks more impressive in a demo.
+
+3. The in-memory room state pattern
+js// server/roomState.js
+const rooms = new Map();
+// rooms.get(roomId) = { code: "...", users: [], cursors: {} }
+Why RAM and not MongoDB for live edits? Because a keystroke fires an event every 50-200ms. Writing to MongoDB on every keystroke would be 5-20 DB writes per second per user — extremely slow and expensive. Instead you keep the "hot" state in a Map on the server, and only flush to MongoDB when:
+A user leaves the room
+The room becomes empty
+The user explicitly clicks "Save"
+This is the same pattern Redis is used for in production apps — your RAM Map is your local Redis.
+
+4. How code:change works (the core event)
+js// client — fires on every editor change
+editor.onDidChangeModelContent(() => {
+  socket.emit("code:change", {
+    roomId,
+    code: editor.getValue()
+  });
+});
+
+// server — receives and broadcasts to everyone else in room
+socket.on("code:change", ({ roomId, code }) => {
+  rooms.get(roomId).code = code; // update in-memory state
+  socket.to(roomId).emit("code:update", { code }); // broadcast to others, NOT back to sender
+});
+
+// client — receives and applies (only runs on other users' screens)
+socket.on("code:update", ({ code }) => {
+  if (editor.getValue() !== code) {
+    editor.setValue(code); // update editor without re-triggering the change event
+  }
+});
+Note: socket.to(roomId) sends to everyone in the room except the sender. If you used io.to(roomId) it would echo back to the sender too, causing an infinite loop.
+
+5. JWT in Socket.io — why it's different from HTTP
+HTTP requests attach JWT in the Authorization header. But Socket.io is a persistent connection — there's no header after the handshake. So you validate JWT at the handshake moment:
+js// server/index.js
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token; // client sends this at connect time
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    socket.user = decoded; // attach user info to socket object
+    next();
+  } catch {
+    next(new Error("Unauthorized"));
+  }
+});
+js// client/socket.js
+const socket = io(SERVER_URL, {
+  auth: { token: localStorage.getItem("token") }
+});
+After this middleware runs, every socket event handler can trust socket.user is the authenticated user. No need to re-verify on every event.
+
+6. Live cursors — how they work
+Each user's cursor position is an { lineNumber, column } object from Monaco. You emit it on every cursor move and render other users' cursors as colored overlays:
+js// client — emit cursor position
+editor.onDidChangeCursorPosition(({ position }) => {
+  socket.emit("cursor:move", { roomId, position, userId });
+});
+
+// server — relay to room (excluding sender)
+socket.on("cursor:move", ({ roomId, position, userId }) => {
+  socket.to(roomId).emit("cursor:update", { position, userId });
+});
+On the client you maintain a cursors state object like { userId: { position, color, username } } and render each one as an absolutely-positioned element over the editor.
+
+7. MongoDB schemas — what to store
+js// Room schema
+{
+  name: String,
+  createdBy: ObjectId (ref User),
+  files: [ObjectId (ref File)],
+  members: [ObjectId (ref User)],
+  isPrivate: Boolean,
+  shareCode: String  // 6-char random code to join
+}
+
+// File schema
+{
+  room: ObjectId,
+  name: String,       // "index.js"
+  language: String,   // "javascript"
+  content: String     // last saved code
+}
+The shareCode is important — it's how users join a room without needing to be invited. You generate a short random code (like "xk92pz") when the room is created, and anyone with that code can join.
+“We store rooms and files separately in MongoDB to maintain clean relationships and scalability. The room schema manages metadata and access control, while the file schema stores the latest persisted code. Real-time edits are handled in memory, and only final states are saved.”
+
+
+8. Why Vite and not Create React App?
+CRA is deprecated and slow. Vite starts the dev server in under 300ms, has native ES module support, and handles environment variables cleanly. Always use Vite for new React projects in 2024+.
+“Vite uses native ES modules to serve files on demand, resulting in near-instant startup and fast hot module replacement, whereas Create React App relies on Webpack bundling, making it slower and less efficient for modern development.”
+
+The one thing that trips everyone up:
+The echo loop. When user A types, the client emits code:change. The server updates state and emits code:update to everyone else. But if you accidentally emit back to the sender too (using io.to() instead of socket.to()), the sender receives their own update, which triggers another code:change, which triggers another broadcast — infinite loop, editor freezes. Always use socket.to(roomId) on the server to exclude the sender.
+“An echo loop occurs when the server broadcasts updates back to the sender, causing the client to re-emit the same change repeatedly. This is avoided by using socket.to(roomId) to exclude the sender and adding client-side checks before applying updates.”
