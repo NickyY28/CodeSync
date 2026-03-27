@@ -26,14 +26,5 @@ mongoose
     );
   })
   .catch((err) => console.error(err));
-```
 
-**Why `.connect().then()` starts the server inside it?** Because you want to guarantee MongoDB is ready before you accept any requests. If you start the server and connect separately, a request could come in before the DB is ready and crash.
-
----
-
-### 3. `server/.env`
-```
-MONGO_URI=mongodb://localhost:27017/codesync
-JWT_SECRET=your_super_secret_key_change_this
-PORT=5000
+// **Why `.connect().then()` starts the server inside it?** Because you want to guarantee MongoDB is ready before you accept any requests. If you start the server and connect separately, a request could come in before the DB is ready and crash.
