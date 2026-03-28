@@ -1,0 +1,73 @@
+Question 1 :
+async function test() {
+  throw "Error";
+}
+test().then(console.log).catch(console.log);
+
+output = Error 
+why? this is not a normal throw, this actually becomes : return Promise.reject("Error");
+So this line:
+test().then(console.log).catch(console.log);
+Behaves like:
+test() returns a rejected promise
+.then() is skipped (because promise failed)
+.catch() runs and logs "Error"
+
+Question 2: 
+async function f() {
+  console.log(1);
+  await Promise.resolve();
+  console.log(2);
+}
+f();
+console.log(3);
+
+Output = 1 /n 3 /n 2
+Why? f() call hota hai
+console.log(1) → prints 1
+await Promise.resolve() → Promise already resolved hai
+BUT await still pauses the function
+It schedules the rest (console.log(2)) as a microtask
+
+Question 3: 
+console.log("start");
+
+setTimeout(() => console.log("timeout"), 0);
+
+Promise.resolve().then(() => console.log("promise"));
+
+console.log("end");
+
+Output = start /n end /n promise /n timeout
+Why? Synchronous code runs first
+"start" prints
+setTimeout(...) → scheduled (goes to callback queue)
+Promise.then(...) → scheduled (goes to microtask queue)
+"end" prints
+Microtasks (Promises) always run before macrotasks (setTimeout)
+note: Sync → Microtasks → Macrotasks
+
+Question 4:  Async + event loop
+console.log("A");
+
+setTimeout(() => console.log("B"), 0);
+
+async function test() {
+  console.log("C");
+  await Promise.resolve();
+  console.log("D");
+}
+
+test();
+
+Promise.resolve().then(() => console.log("E"));
+
+console.log("F");
+
+Output = A /n C /n F /n D /n E /n B
+Why? Synchronous code runs first A → direct
+test() runs → C
+await pauses function
+F runs
+Microtasks run → D, E
+Macrotask runs → B
