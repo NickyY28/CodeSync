@@ -18,7 +18,7 @@ codesync/
 │   │   └── App.jsx
 │
 ├── server/
-│   ├── models/
+│   ├── models/                  # MongoDB schemas
 │   │   ├── User.js
 │   │   ├── Room.js
 │   │   └── File.js
@@ -29,6 +29,8 @@ codesync/
 │   │   └── authMiddleware.js    # verifies JWT
 │   ├── socket/
 │   │   └── socketHandlers.js    # all socket events live here
+│   ├── db/
+│   │   └── connect.js
 │   ├── roomState.js             # in-memory Map for live sessions
 │   └── index.js                 # entry point
 
@@ -137,3 +139,40 @@ CRA is deprecated and slow. Vite starts the dev server in under 300ms, has nativ
 The one thing that trips everyone up:
 The echo loop. When user A types, the client emits code:change. The server updates state and emits code:update to everyone else. But if you accidentally emit back to the sender too (using io.to() instead of socket.to()), the sender receives their own update, which triggers another code:change, which triggers another broadcast — infinite loop, editor freezes. Always use socket.to(roomId) on the server to exclude the sender.
 “An echo loop occurs when the server broadcasts updates back to the sender, causing the client to re-emit the same change repeatedly. This is avoided by using socket.to(roomId) to exclude the sender and adding client-side checks before applying updates.”
+
+9. Agar koi aur website same port (e.g., http://localhost:5173) pe chal rahi ho, toh kya wo humare backend se data le sakti hai?
+Case 1: Backend local machine par hai (not deployed)
+localhost = same machine only
+Dusra laptop ka localhost:5173 ≠ tumhara localhost:5173
+So:
+Dusra banda direct access nahi kar sakta
+Jab tak:
+usko tumhara IP address na mile (192.168.x.x)
+aur wo usse connect na kare
+✔️ Agar wo IP se connect kar leta hai + CORS allow karta hai → data mil jayega
+Case 2: Backend LIVE hai (production) — ⚠️ important
+Agar tumne CORS me ye likh diya:
+origin: "http://localhost:5173"
+ Then:
+Koi bhi banda apne laptop pe localhost:5173 run karega
+Aur tumhare live backend ko hit karega
+Server bolega: “allowed hai”
+Data leak ho jayega
+✅ Solution
+Use environment-based config:
+origin: process.env.FRONTEND_URL
+Dev → http://localhost:5173
+Prod → https://your-real-site.com
+
+10. Mongoose Schema Syntax (User.js)
+Ek Schema Database mein collection (table) ka blueprint hota hai. Isko banate waqt class me 2 objects paas hote hain:
+
+new mongoose.Schema( Object_1, Object_2 )
+
+- Object_1 (BluePrint 🟢): Ye compulsory hota hai. Isme fields decide hote hain (username, email) aur unke rules (type: String, required: true, unique: true).
+- Object_2 (Options 🟡): Ye optional hota hai. Isme settings aati hain, jaise {timestamps: true} jo automatically DB mein 'createdAt' aur 'updatedAt' column add kar deta hai.
+
+mongoose.model("User", userSchema)
+Sirf Schema (Blueprint) se database me kaam nahi hota. Model us blueprint ko factory me badalta hai taaki DB me data save/read kr sakein. 
+Note: "User" naam dene se MongoDB apne aap usko database me lowercase aur plural  karke `users` collection bana deta hai.
+
