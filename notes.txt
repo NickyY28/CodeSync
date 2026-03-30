@@ -176,3 +176,40 @@ mongoose.model("User", userSchema)
 Sirf Schema (Blueprint) se database me kaam nahi hota. Model us blueprint ko factory me badalta hai taaki DB me data save/read kr sakein. 
 Note: "User" naam dene se MongoDB apne aap usko database me lowercase aur plural  karke `users` collection bana deta hai.
 
+/*
+ * WORKFLOW SUMMARY (Mongoose & MongoDB):
+ * 
+ * 1. Schema Initialization (Runs Once): 
+ *    The `mongoose.Schema()` function executes ONLY ONCE when the Node server starts. 
+ *    It keeps this "blueprint" or "ruleset" in memory. Unlike SQL, it DOES NOT create 
+ *    a pre-existing table with blank columns in the database.
+ * 
+ * 2. Document Creation (Runs per Request): 
+ *    When a user creates a room, `Room.create(...)` (in routes/rooms.js) is called.
+ *    The `roomSchema` function does NOT run again. Instead, Mongoose takes the incoming 
+ *    data (name, user IDs, nanoid(6) shareCode) and validates it against the blueprint in memory.
+ * 
+ * 3. Database Insertion: 
+ *    If the data strictly follows the blueprint rules, Mongoose packages it into a brand  
+ *    new JSON-like object (a Document) along with the auto-generated timestamps.
+ *    It then drops this newly created document right into the MongoDB collection.
+ */
+
+/*
+ * WHY `room` IS REQUIRED IN FileSchema BUT `file` IS NOT REQUIRED IN RoomSchema?
+ *
+ * 1. The "Chicken-and-Egg" Conflict:
+ *    If both schemas strictly required each other, neither could be created first. 
+ *    You would need a Room ID to create a File, and a File ID to create a Room, 
+ *    resulting in a system loop/deadlock.
+ *
+ * 2. Parent-Child Execution Flow:
+ *    In a One-to-Many database relationship, the Parent (Room) must be created 
+ *    first to generate a unique MongoDB ObjectId. Once the Room exists, the Child (File) 
+ *    is created immediately after and attaches the Parent's ID to itself as a reference.
+ *
+ * 3. Preventing Orphan Data (Strictness):
+ *    From a database perspective, a Room can safely exist without any code files inside it. 
+ *    However, a Code File CANNOT exist in the system without belonging to a specific Room. 
+ *    Therefore, `room: { required: true }` guarantees that no "orphan" files enter the DB.
+ */
