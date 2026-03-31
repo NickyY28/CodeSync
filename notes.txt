@@ -213,3 +213,140 @@ Note: "User" naam dene se MongoDB apne aap usko database me lowercase aur plural
  *    However, a Code File CANNOT exist in the system without belonging to a specific Room. 
  *    Therefore, `room: { required: true }` guarantees that no "orphan" files enter the DB.
  */
+
+1. bcrypt salt rounds
+
+bcrypt.hash(password, 10)
+
+That 10 is basically:
+“how hard do you want to make the hacker suffer?”
+
+Internally it runs hashing 2¹⁰ = 1024 times
+More rounds = slower hashing = harder to crack
+
+Why it matters:
+
+If someone steals your DB, they try brute force
+Each guess becomes slow → attack becomes impractical
+
+Reality check:
+
+< 10 → weak, don’t do it
+10–12 → sweet spot
+> 14 → your login becomes a loading screen simulator
+
+So yeah, you're trading security vs speed, not just picking a random number.
+
+2. JWT payload is NOT encrypted
+
+This is where people mess up badly.
+
+JWT looks fancy, but:
+
+It is encoded, NOT encrypted
+Anyone can decode it on tools like jwt.io
+
+So if you do this:
+
+{ id, email, password }
+
+Congrats, you just leaked user data publicly.
+
+Correct mindset:
+JWT = identity card, not a locker
+
+Only put:
+
+{ id, username }
+
+Golden rule:
+If you'd be uncomfortable showing it in frontend console → don’t put it in JWT.
+
+3. socket.to() vs io.to()
+
+This one is subtle but important.
+
+io.to(room)
+Sends message to everyone in room
+INCLUDING sender
+socket.to(room)
+Sends to everyone except sender
+
+Now think:
+
+You're building a collaborative editor.
+
+User types → emits change → server broadcasts
+
+If you use:
+
+io.to(room).emit("change")
+
+Sender also gets it → applies change again → duplicate / loop / glitch
+
+So we use:
+
+socket.to(room).emit("change")
+
+Translation:
+
+io.to() = announcement
+socket.to() = gossip behind your back
+
+For live updates → always exclude sender.
+
+4. In-memory vs DB
+
+This is architecture thinking—good devs get this, average ones ignore it.
+
+RAM (your Map)
+Fast
+Temporary
+Used for live stuff
+
+Example:
+
+current code in editor
+active users in room
+MongoDB
+Slow(er)
+Permanent
+Used for storage
+
+Example:
+
+saved files
+user accounts
+
+Flow:
+
+While editing → keep in RAM
+When user leaves / clicks save → push to DB
+
+Why not DB directly?
+Because hitting DB on every keystroke = suicide for performance.
+
+5. router.use(protect)
+
+This is just being lazy in a smart way.
+
+Instead of:
+
+router.get("/a", protect, handler)
+router.get("/b", protect, handler)
+router.get("/c", protect, handler)
+
+You do:
+
+router.use(protect)
+
+router.get("/a", handler)
+router.get("/b", handler)
+router.get("/c", handler)
+
+Now EVERYTHING below is protected.
+
+Think of it like:
+
+You put a security guard at the building entrance
+Instead of checking ID at every room

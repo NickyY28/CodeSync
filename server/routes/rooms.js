@@ -42,7 +42,6 @@ router.post("/join", async (req, res) => {
       room.members.push(req.user.id);
       await room.save();
     }
-
     res.json(room);
   } catch (err) {
     res.status(500).json({ message: err.message });

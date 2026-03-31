@@ -51,17 +51,13 @@ Question 4:  Async + event loop
 console.log("A");
 
 setTimeout(() => console.log("B"), 0);
-
 async function test() {
   console.log("C");
   await Promise.resolve();
   console.log("D");
 }
-
 test();
-
 Promise.resolve().then(() => console.log("E"));
-
 console.log("F");
 
 Output = A /n C /n F /n D /n E /n B
@@ -71,3 +67,88 @@ await pauses function
 F runs
 Microtasks run → D, E
 Macrotask runs → B
+
+-> bcrypt Salt Rounds
+
+Q: What are salt rounds in bcrypt?
+Salt rounds define how many times the hashing algorithm runs internally.
+Example: bcrypt.hash(password, 10) → runs 2¹⁰ = 1024 iterations.
+
+Q: Why are salt rounds important?
+They make hashing slower, which protects against brute-force attacks by increasing computation time per guess.
+
+Q: What is the ideal range for salt rounds?
+
+Minimum: 10 (anything lower is insecure)
+Recommended: 10–12
+Maximum: 14 (beyond this, login becomes too slow)
+-> JWT Payload Security
+
+Q: Is JWT payload encrypted?
+No, JWT payload is encoded, not encrypted. Anyone can decode it.
+
+Q: What should be stored in a JWT payload?
+Only non-sensitive data like:
+
+user id
+username
+
+Q: What should never be stored in a JWT payload?
+
+passwords
+emails
+secrets or private data
+
+Q: Why should sensitive data not be stored in JWT?
+Because it is visible to anyone who decodes the token.
+
+-> socket.to() vs io.to()
+
+Q: What does io.to(room) do?
+Sends a message to all clients in the room, including the sender.
+
+Q: What does socket.to(room) do?
+Sends a message to all clients in the room except the sender.
+
+Q: Which one should be used for real-time updates like code collaboration?
+Use socket.to(room) to avoid sending the update back to the sender.
+
+Q: Why avoid sending updates back to the sender?
+It can cause duplicate updates or infinite loops in real-time applications.
+
+-> In-Memory State vs Database
+
+Q: What is in-memory state?
+Data stored in RAM (e.g., using a Map), used for fast, temporary operations.
+
+Q: What kind of data should be stored in memory?
+
+live editor content
+active users
+temporary session data
+
+Q: What kind of data should be stored in a database (MongoDB)?
+
+user accounts
+saved files
+permanent records
+
+Q: When should data move from memory to database?
+On events like:
+
+user disconnect
+manual save
+
+Q: Why not store everything directly in the database?
+Because frequent DB writes (e.g., on every keystroke) reduce performance.
+
+-> router.use(protect)
+
+Q: What does router.use(protect) do?
+Applies the protect middleware to all routes defined after it.
+
+Q: Why use router.use(protect) instead of adding middleware to each route?
+It avoids repetition and ensures all routes are protected automatically.
+
+Q: Where should router.use(protect) be placed?
+At the top of the router file, before defining protected routes.
