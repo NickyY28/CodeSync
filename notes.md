@@ -350,3 +350,7 @@ Think of it like:
 
 You put a security guard at the building entrance
 Instead of checking ID at every room
+
+## Architecture Diagram
+![Architecture](./docs/architecture.svg)
+
