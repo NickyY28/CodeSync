@@ -53,7 +53,13 @@ const removeUser = (roomId, socketId) => {
   // If room is empty, clean it up from RAM
   if (room.users.length === 0) rooms.delete(roomId);
 };
-
+/*room.users = room.users.filter((u) => u.socketId !== socketId);
+1. Remove from List (.filter): Ye jaane wale user ki id (socketId) ko baaki logo se check karta hai. Jinki aapas me match NAHI hoti (!==), unko rakh leta hai. Jiska match hua wo bahar! (Array se filter ho gaya).
+delete room.cursors[socketId];
+2. Remove Cursor (delete): Us user ka screen pe cursor (mouse/pointer) gayab karne ke liye delete keyword se uski puri entry mita di jati hai. (Warna baaki logo ko ek atka hua ghost cursor dikhega).
+if (room.users.length === 0) rooms.delete(roomId);
+3. Memory Save (.delete): Agar last banda bhi room se chala gaya aur array ki length 0 ho gayi, toh Server ki RAM memoy bachane ke liye poore room ka data hi Map se uda (delete kar) diya jata hai.
+*/
 const updateCode = (roomId, code) => {
   const room = getRoom(roomId);
   if (room) room.code = code;
