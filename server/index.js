@@ -27,7 +27,7 @@ app.use(cors({ origin: "http://localhost:5173" }));
 // allow requests only from frontend (Vite runs on port 5173)
 
 app.use(express.json());
-// parse incoming JSON data from requests (req.body usable banata hai)
+// express.json() Frontend se jo bhi Data aayega usko saaf suthra karke aage code ke liye req.body mein convert karega. Iske bina frontend ka bheja Data server padh nahi paayega.
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -36,7 +36,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/rooms", roomRoutes);
 // all room routes will be prefixed with /api/rooms (e.g., /api/rooms/create)
 
-// ── JWT guard on every socket connection ─────────────────────
+// ── JWT guard on every socket connection ─────
 const jwt = require("jsonwebtoken");
 
 io.use((socket, next) => {
@@ -50,12 +50,17 @@ io.use((socket, next) => {
     next(new Error("Invalid token"));
   }
 });
-
-// ── Pass io into socket handlers ─────────────────────────────
+// ── Pass io into socket handlers ───────
 initSocketHandlers(io);
+/*Logic: io.use() socket par ek guard laga deta hai.
+Koi bhi insaan Frontend se jab socket connect karega, to use token (Entry Pass) dena hoga.
+Hum JWT se check karenge ki pass asli hai kya? Agar original hai, to us pass ke andar jo User ki info hai usko socket.user = decoded mein daal lenge. (Taki baad mein pata rahe kon likh raha hai code).
+next() ka matlab hai "Sab theek hai, ab andar jaane do/connect hone do".
+Uske baad ye verified insaan initSocketHandlers(io) file ke paas jayega apne event chalane.
+*/
 
 connectDB().then(() => {
-  app.listen(process.env.PORT || 5000, () =>
+  httpServer.listen(process.env.PORT || 5000, () =>
   console.log(`Server running on port ${process.env.PORT || 5000}`)
   );
 }); 
