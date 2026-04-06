@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;500;600;700;800&display=swap');
+
+/* ── Tokens ──────────────────────────────────────────── */
+:root {
+  --bg-0: #0a0a0a;        /* deepest background */
+  --bg-1: #111111;        /* surface */
+  --bg-2: #181818;        /* elevated surface */
+  --bg-3: #222222;        /* hover / active */
+
+  --border: #2a2a2a;
+  --border-bright: #3a3a3a;
+
+  --accent: #f97316;      /* orange — the one warm thing */
+  --accent-dim: #7c3a0e;
+  --accent-glow: rgba(249, 115, 22, 0.15);
+
+  --text-1: #f0ece4;      /* primary — slightly warm white */
+  --text-2: #8a8680;      /* secondary */
+  --text-3: #4a4845;      /* muted */
+
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+
+  --transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Reset ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+body {
+  background: var(--bg-0);
+  color: var(--text-1);
+  font-family: var(--mono);
+  min-height: 100vh;
+  /* subtle scanline texture — the one thing people will remember */
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255,255,255,0.012) 2px,
+    rgba(255,255,255,0.012) 4px
+  );
+}
+
+/* ── Scrollbar ───────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-1); }
+::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+/* ── Selection ───────────────────────────────────────── */
+::selection { background: var(--accent-glow); color: var(--accent); }
+
+/* ── Shared component styles ─────────────────────────── */
+.btn {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.55rem 1.2rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+.btn-primary:hover {
+  background: #fb923c;
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-2);
+  border-color: var(--border);
+}
+.btn-ghost:hover {
+  border-color: var(--border-bright);
+  color: var(--text-1);
+  background: var(--bg-2);
+}
+
+.input {
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  color: var(--text-1);
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-sm);
+  width: 100%;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  outline: none;
+}
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.input::placeholder { color: var(--text-3); }
+
+.tag {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-3);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
