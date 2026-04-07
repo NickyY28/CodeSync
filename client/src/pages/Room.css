@@ -1,0 +1,117 @@
+.room {
+  height: 100vh;
+  display: grid;
+  grid-template-rows: 48px 36px 1fr; /* topbar / tabs / body */
+  overflow: hidden;                   /* nothing scrolls except editor + chat */
+}
+
+/* ── Topbar ───────────────────────────────────────────── */
+.room-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border);
+  gap: 1rem;
+}
+
+.room-topbar__left  { display: flex; align-items: center; gap: 0.75rem; }
+.room-topbar__center { flex: 1; display: flex; justify-content: center; }
+.room-topbar__right { display: flex; align-items: center; gap: 0.75rem; }
+
+.room-logo {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.bracket { color: var(--accent); }
+
+.room-name {
+  font-size: 0.85rem;
+  color: var(--text-2);
+  font-weight: 500;
+  border-left: 1px solid var(--border);
+  padding-left: 0.75rem;
+}
+
+/* save status indicator */
+.save-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.save-status__dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text-3);
+  transition: background 200ms;
+}
+.save-status[data-status="saved"]   .save-status__dot { background: #10b981; box-shadow: 0 0 5px #10b981; }
+.save-status[data-status="unsaved"] .save-status__dot { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
+.save-status[data-status="saving"]  .save-status__dot {
+  background: #facc15;
+  animation: pulse-dot 0.8s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
+}
+
+/* share code button */
+.share-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+  transition: all var(--transition);
+  color: var(--text-1);
+  font-family: var(--mono);
+}
+.share-btn:hover { border-color: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
+.share-code {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+.share-btn__label {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  border-left: 1px solid var(--border);
+  padding-left: 0.5rem;
+}
+
+.room-leave { font-size: 0.75rem; padding: 0.35rem 0.75rem; }
+
+/* ── Body ─────────────────────────────────────────────── */
+.room-body {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  overflow: hidden;
+}
+
+/* ── Sidebar ──────────────────────────────────────────── */
+.room-sidebar {
+  background: var(--bg-1);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Editor ───────────────────────────────────────────── */
+.room-editor-wrap {
+  position: relative;   /* needed so cursor overlay can position absolutely inside */
+  overflow: hidden;
+  background: #1e1e1e;  /* Monaco's vs-dark bg — match exactly so no flash */
+}
