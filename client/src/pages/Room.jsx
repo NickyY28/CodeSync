@@ -125,7 +125,58 @@ export default function Room() {
     };
   }, []);
 
-  // ── 4. Render ─────────────────────────────────────────────
+  // ── 3. Monaco callbacks ───────────────────────────────────
+  const handleEditorMount = (editor) => {
+    editorRef.current = editor;
+
+    // Ctrl+S → save
+    editor.addCommand(
+      // Monaco uses keybinding masks — this is the cross-platform Ctrl/Cmd+S
+      editor.createContextKey("always", true),
+      () => handleSave(),
+      // Monaco keybinding: 2048 = Ctrl, 49 = S key
+    );
+
+    // Keyboard shortcut for save
+    editor.addAction({
+      id: "save-file",
+      label: "Save File",
+      keybindings: [2048 | 49], // Ctrl+S
+      run: () => handleSave(),
+    });
+
+    // Emit cursor position on every move
+    editor.onDidChangeCursorPosition(({ position }) => {
+      socket.emit("cursor:move", { roomId, position });
+    });
+  };
+
+  // Called on every keystroke in Monaco
+  const handleCodeChange = useCallback((value) => {
+    // isRemoteUpdate.current = true means the change came from socket,
+    // not the user — skip emitting to prevent echo loop
+    if (isRemoteUpdate.current) return;
+    setSaveStatus("unsaved");
+    socket.emit("code:change", { roomId, code: value });
+  }, [roomId]);
+
+  const handleSave = () => {
+    if (!activeFile || !editorRef.current) return;
+    setSaveStatus("saving");
+    socket.emit("code:save", { roomId, fileId: activeFile._id });
+  };
+
+  const handleFileSwitch = (file) => {
+    setActiveFile(file);
+    socket.emit("file:change", { roomId, fileId: file._id });
+  };
+
+  const copyShareCode = () => {
+    navigator.clipboard.writeText(room?.shareCode || "");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  
   return (
     <div className="room">
 
