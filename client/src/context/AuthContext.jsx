@@ -44,4 +44,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => useContext(AuthContext); //custom hook to use the auth context,Is line se useAuth ek special shortcut function ban gaya. Matlab ab frontend ki koi bhi file me aap useAuth() likhoge to aapko seedha user, token, login(), logout(), loading sab mil jayenge. 
