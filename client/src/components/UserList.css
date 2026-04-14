@@ -1,0 +1,70 @@
+.userlist {
+  padding: 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.userlist__label {
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+.userlist__count {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 0.4rem;
+  font-size: 0.65rem;
+  color: var(--text-2);
+}
+
+.userlist__items { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+
+.userlist__item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.user-avatar {
+  width: 26px; height: 26px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #000;
+  flex-shrink: 0;
+  letter-spacing: 0.03em;
+}
+
+.userlist__name {
+  font-size: 0.8rem;
+  color: var(--text-2);
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.userlist__you {
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-glow);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+}
+
+.user-online-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 5px #10b981;
+  flex-shrink: 0;
+}

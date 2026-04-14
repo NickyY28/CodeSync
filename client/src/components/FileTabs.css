@@ -1,0 +1,47 @@
+.filetabs {
+  display: flex;
+  align-items: stretch;
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;  /* hide scrollbar on tabs row */
+}
+.filetabs::-webkit-scrollbar { display: none; }
+
+.filetab {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 1.1rem;
+  height: 36px;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text-3);
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition);
+  position: relative;
+}
+.filetab:hover { color: var(--text-1); background: var(--bg-2); }
+
+.filetab.active {
+  color: var(--text-1);
+  background: #1e1e1e;  /* matches Monaco background exactly */
+}
+/* active tab bottom line indicator */
+.filetab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: var(--accent);
+}
+
+.filetab__dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
