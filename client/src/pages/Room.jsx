@@ -4,10 +4,10 @@ import Editor from "@monaco-editor/react";
 import axios from "axios";
 import socket from "../socket";
 import { useAuth } from "../context/AuthContext";
-import Filetabs from "../components/FileTabs";
-import UserList from "../components/UserList";
+// import Filetabs from "../components/FileTabs";
+// import UserList from "../components/UserList";
 import Chat from "../components/Chat";
-import CursorOverlay from "../components/CursorOverlay";
+// import CursorOverlay from "../components/CursorOverlay";
 import "./Room.css";
 
 export default function Room() {
@@ -176,7 +176,7 @@ export default function Room() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-  
+
   return (
     <div className="room">
 
