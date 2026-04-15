@@ -70,3 +70,5 @@ temp/
 # 🧬 Mongo dump (if you ever export)
 
 dump/
+notes.md 
+questions.txt
