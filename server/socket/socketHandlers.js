@@ -148,6 +148,19 @@ const initSocketHandlers = (io) => {
         }
       }
     });
+
+    // inside io.on("connection") — add alongside the other events
+    socket.on("room:leave", ({ roomId }) => {
+    socket.leave(roomId);
+    removeUser(roomId, socket.id);
+    const room = getRoom(roomId);
+    if (room) {
+      io.to(roomId).emit("room:user-left", {
+        users: room.users,
+        socketId: socket.id,
+     });
+    }
+   });
   });
 };
 

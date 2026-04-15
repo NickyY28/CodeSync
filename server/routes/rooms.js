@@ -58,4 +58,30 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get single room by ID — called on Room page load
+router.get("/:id", async (req, res) => {
+  try {
+    const room = await Room.findById(req.params.id).populate("createdBy", "username");
+    if (!room) return res.status(404).json({ message: "Room not found" });
+
+    // Check user is a member
+    if (!room.members.map(String).includes(req.user.id)) {
+      return res.status(403).json({ message: "Not a member of this room" });
+    }
+    res.json(room);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get all files for a room
+router.get("/:id/files", async (req, res) => {
+  try {
+    const files = await File.find({ room: req.params.id });
+    res.json(files);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
