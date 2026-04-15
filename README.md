@@ -29,7 +29,7 @@ CodeSync is a full-stack real-time collaborative coding environment. It allows m
 - **MongoDB & Mongoose** for persistent data storage (Users, Rooms, Files).
 - **JSON Web Tokens (JWT) & bcryptjs** for secure authentication and password hashing.
 
-## 🧠 System Architecture & Workflow
+## System Architecture & Workflow
 
 CodeSync implements a hybrid state-management approach to balance performance and persistence:
 
@@ -38,7 +38,7 @@ CodeSync implements a hybrid state-management approach to balance performance an
 3. **The Hot State (RAM):** Once inside, the connection upgrades to WebSockets. All high-frequency events (keystrokes, cursor movements) bypass the database and are handled by a dedicated Node.js `Map()` in server memory (`roomState.js`) to prevent database throttling and ensure near-zero latency.
 4. **Persistence:** The live code is periodically flushed to MongoDB when a user manually saves (`Ctrl+S`) or when the final user disconnects from the room.
 
-## 💻 Installation & Local Setup
+## Installation & Local Setup
 
 ### Prerequisites
 - Node.js (v18+ recommended)
