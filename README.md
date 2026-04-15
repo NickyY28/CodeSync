@@ -6,7 +6,7 @@ CodeSync is a full-stack real-time collaborative coding environment. It allows m
 
 ![CodeSync Demo](placeholder-for-demo-image.gif)
 
-## 🚀 Features
+## Features
 
 - **Real-Time Collaboration:** Instant code synchronization using WebSockets (`Socket.io`).
 - **Live Cursor Tracking:** See exactly where other developers are typing with color-coded cursors.
@@ -15,7 +15,7 @@ CodeSync is a full-stack real-time collaborative coding environment. It allows m
 - **Secure Authentication:** JWT-based user authentication and protected routes.
 - **Optimized Performance:** Uses an in-memory caching system (RAM) for ultra-fast, high-frequency keystroke syncing, while persisting final states to MongoDB.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 - **React (v19)** with **Vite** for fast builds and optimized rendering.
@@ -79,10 +79,3 @@ CodeSync implements a hybrid state-management approach to balance performance an
 4. **Access the App:**
    Open `http://localhost:5173` in your browser.
 
-## 🤝 Future Enhancements
-- Video / Audio calling integration (WebRTC).
-- Integrated terminal / code execution engine.
-- Version control history for individual files.
-
----
-*Developed for seamless pair programming and remote technical interviews.*
