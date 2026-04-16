@@ -2,43 +2,46 @@ import { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 
 const AuthContext = createContext();
-
-// Set base URL once — all axios calls use this automatically
 axios.defaults.baseURL = "http://localhost:5000";
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token"));
-  const [loading, setLoading] = useState(true);
+// ── Run this SYNCHRONOUSLY at module load time ──────────
+// This executes before any component mounts or any useEffect fires
+// so the header is always set before the first request
+const token = localStorage.getItem("token");
+if (token) {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+}
+// ────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    // If token exists in localStorage, attach it to every request
-    if (token) {
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      // Decode user from token payload (base64 middle section)
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      setUser(payload);
-    }
-    setLoading(false);
-  }, [token]);
+const decodeToken = (token) => {
+  try {
+    return JSON.parse(atob(token.split(".")[1]));
+  } catch {
+    return null;
+  }
+};
+
+export const AuthProvider = ({ children }) => {
+  // Initialize user synchronously too — no loading flicker
+  const [user, setUser] = useState(() => {
+    const t = localStorage.getItem("token");
+    return t ? decodeToken(t) : null;
+  });
 
   const login = (token) => {
     localStorage.setItem("token", token);
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    setUser(payload);
-    setToken(token);
+    setUser(decodeToken(token));
   };
 
   const logout = () => {
     localStorage.removeItem("token");
     delete axios.defaults.headers.common["Authorization"];
     setUser(null);
-    setToken(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

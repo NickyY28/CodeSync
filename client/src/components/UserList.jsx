@@ -17,14 +17,20 @@ const colorFor = (username) => {
 };
 
 export default function UserList({ users, currentUserId }) {
+  // Deduplicate by socketId before rendering
+  // If somehow two entries share a socketId, keep only the first
+  const uniqueUsers = users.filter(
+    (u, index, self) => index === self.findIndex((x) => x.socketId === u.socketId)
+  );
+
   return (
     <div className="userlist">
       <p className="userlist__label">
         online
-        <span className="userlist__count">{users.length}</span>
+        <span className="userlist__count">{uniqueUsers.length}</span>
       </p>
       <ul className="userlist__items">
-        {users.map((u) => (
+        {uniqueUsers.map((u) => (
           <li key={u.socketId} className="userlist__item">
             <span
               className="user-avatar"

@@ -33,7 +33,12 @@ Uske baad ye bani hui information return kar deta hai.
 const addUser = (roomId, userInfo) => {
   const room = getRoom(roomId);
   if (!room) return;
-  // Assign color based on how many users are already in room
+
+  // Guard: if this socketId already exists, don't add again
+  // This is the root fix — duplicates can never enter the array
+  const alreadyExists = room.users.some((u) => u.socketId === userInfo.socketId);
+  if (alreadyExists) return;
+
   const color = COLORS[room.users.length % COLORS.length];
   room.users.push({ ...userInfo, color });
 };

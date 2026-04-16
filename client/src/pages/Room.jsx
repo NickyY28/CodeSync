@@ -4,10 +4,10 @@ import Editor from "@monaco-editor/react";
 import axios from "axios";
 import socket from "../socket";
 import { useAuth } from "../context/AuthContext";
-// import Filetabs from "../components/FileTabs";
-// import UserList from "../components/UserList";
+import Filetabs from "../components/FileTabs";
+import UserList from "../components/UserList";
 import Chat from "../components/Chat";
-// import CursorOverlay from "../components/CursorOverlay";
+import CursorOverlay from "../components/CursorOverlay";
 import "./Room.css";
 
 export default function Room() {
@@ -126,30 +126,26 @@ export default function Room() {
   }, []);
 
   // ── 3. Monaco callbacks ───────────────────────────────────
-  const handleEditorMount = (editor) => {
-    editorRef.current = editor;
+ const handleEditorMount = (editor) => {
+  editorRef.current = editor;
 
-    // Ctrl+S → save
-    editor.addCommand(
-      // Monaco uses keybinding masks — this is the cross-platform Ctrl/Cmd+S
-      editor.createContextKey("always", true),
-      () => handleSave(),
-      // Monaco keybinding: 2048 = Ctrl, 49 = S key
-    );
+  // Ctrl+S / Cmd+S → save
+  // addAction is the correct Monaco API for keyboard shortcuts
+  editor.addAction({
+    id: "save-file",
+    label: "Save File",
+    // Monaco keybinding constants:
+    // 2048 = CtrlCmd (works as Ctrl on Windows/Linux, Cmd on Mac)
+    // 49 = KeyS
+    keybindings: [2048 | 49],
+    run: () => handleSave(),
+  });
 
-    // Keyboard shortcut for save
-    editor.addAction({
-      id: "save-file",
-      label: "Save File",
-      keybindings: [2048 | 49], // Ctrl+S
-      run: () => handleSave(),
-    });
-
-    // Emit cursor position on every move
-    editor.onDidChangeCursorPosition(({ position }) => {
-      socket.emit("cursor:move", { roomId, position });
-    });
-  };
+  // Emit cursor position on every move
+  editor.onDidChangeCursorPosition(({ position }) => {
+    socket.emit("cursor:move", { roomId, position });
+  });
+};
 
   // Called on every keystroke in Monaco
   const handleCodeChange = useCallback((value) => {
