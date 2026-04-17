@@ -113,6 +113,10 @@ export default function Room() {
       setSaveStatus("saved");
     });
 
+    socket.on("code:save-error", () => {
+      setSaveStatus("unsaved"); // revert dot back to orange
+    });
+
     return () => {
       // Always remove listeners on cleanup to avoid duplicates
       socket.off("room:state");
@@ -122,6 +126,7 @@ export default function Room() {
       socket.off("cursor:update");
       socket.off("file:changed");
       socket.off("code:saved");
+      socket.off("code:save-error");
     };
   }, []);
 
@@ -156,11 +161,17 @@ export default function Room() {
     socket.emit("code:change", { roomId, code: value });
   }, [roomId]);
 
-  const handleSave = () => {
-    if (!activeFile || !editorRef.current) return;
-    setSaveStatus("saving");
-    socket.emit("code:save", { roomId, fileId: activeFile._id });
-  };
+// Room.jsx — replace handleSave
+const handleSave = useCallback(() => {
+  if (!activeFile?._id || !editorRef.current) return;
+  setSaveStatus("saving");
+  socket.emit("code:save", {
+    roomId,
+    fileId: activeFile._id,
+    // also send code directly — don't rely on RAM state alone
+    code: editorRef.current.getValue(),
+  });
+}, [roomId, activeFile]);
 
   const handleFileSwitch = (file) => {
     setActiveFile(file);

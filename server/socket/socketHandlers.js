@@ -109,14 +109,21 @@ const initSocketHandlers = (io) => {
 
     // ── code:save ──────────────────────────────────────────────
     // Explicit save — user presses Ctrl+S
-    socket.on("code:save", async ({ roomId, fileId }) => {
-      const room = getRoom(roomId);
-      if (!room) return;
+    socket.on("code:save", async ({ roomId, fileId, code }) => {
+    try {
+    // Update RAM state too in case it drifted
+    updateCode(roomId, code);
 
-      await File.findByIdAndUpdate(fileId, { content: room.code });
+    // Write to MongoDB
+    await File.findByIdAndUpdate(fileId, { content: code });
 
-      // Confirm save to everyone in the room
-      io.to(roomId).emit("code:saved", { savedBy: socket.user.username });
+    // Confirm to everyone in room
+    io.to(roomId).emit("code:saved", { savedBy: socket.user.username });
+    console.log(`Saved file ${fileId} by ${socket.user.username}`);
+    } catch (err) {
+    // Tell the sender it failed
+    socket.emit("code:save-error", { message: "Failed to save" });
+      }
     });
 
     // ── disconnect ─────────────────────────────────────────────
