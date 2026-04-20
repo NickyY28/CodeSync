@@ -3,6 +3,8 @@ const cors = require("cors"); // import CORS to allow frontend-backend communica
 const http = require("http");
 const { Server } = require("socket.io");
 require("dotenv").config(); // load environment variables from .env file into process.env
+const executeRoute = require("./routes/execute");
+
 
 const authRoutes = require("./routes/auth"); // import authentication routes (login/signup)
 const roomRoutes = require("./routes/rooms"); // import room-related routes (create/join rooms)
@@ -35,6 +37,8 @@ app.use("/api/auth", authRoutes);
 
 app.use("/api/rooms", roomRoutes);
 // all room routes will be prefixed with /api/rooms (e.g., /api/rooms/create)
+
+app.use("/api/execute", executeRoute);
 
 // ── JWT guard on every socket connection ─────
 const jwt = require("jsonwebtoken");
