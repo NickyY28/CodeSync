@@ -5,7 +5,6 @@ const { Server } = require("socket.io");
 require("dotenv").config(); // load environment variables from .env file into process.env
 const executeRoute = require("./routes/execute");
 
-
 const authRoutes = require("./routes/auth"); // import authentication routes (login/signup)
 const roomRoutes = require("./routes/rooms"); // import room-related routes (create/join rooms)
 const connectDB = require("./db/connect")
@@ -23,7 +22,6 @@ const io = new Server(httpServer, {
     methods: ["GET", "POST"]
   }
 })
-
 // Middleware
 app.use(cors({ origin: "http://localhost:5173" }));
 // allow requests only from frontend (Vite runs on port 5173)
