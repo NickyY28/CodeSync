@@ -84,4 +84,70 @@ router.get("/:id/files", async (req, res) => {
   }
 });
 
+// Create new file in a room
+router.post("/:id/files", async (req, res) => {
+  const { name } = req.body;
+
+  // Auto-detect language from file extension
+  const ext = name.split(".").pop();
+  const LANG_MAP = {
+    js: "javascript", ts: "typescript",
+    py: "python", cpp: "cpp", c: "c",
+    java: "java", go: "go", rs: "rust",
+    html: "html", css: "css",
+  };
+  const language = LANG_MAP[ext] || "plaintext";
+
+  try {
+    const file = await File.create({
+      room: req.params.id,
+      name,
+      language,
+      content: "",
+    });
+    res.status(201).json(file);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Rename a file
+router.patch("/:id/files/:fileId", async (req, res) => {
+  const { name } = req.body;
+  const ext = name.split(".").pop();
+  const LANG_MAP = {
+    js: "javascript", ts: "typescript",
+    py: "python", cpp: "cpp", c: "c",
+    java: "java", go: "go", rs: "rust",
+    html: "html", css: "css",
+  };
+  const language = LANG_MAP[ext] || "plaintext";
+
+  try {
+    const file = await File.findByIdAndUpdate(
+      req.params.fileId,
+      { name, language },
+      { new: true }   // return updated document
+    );
+    res.json(file);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Delete a file
+router.delete("/:id/files/:fileId", async (req, res) => {
+  try {
+    // Don't allow deleting the last file
+    const count = await File.countDocuments({ room: req.params.id });
+    if (count <= 1) {
+      return res.status(400).json({ message: "Cannot delete the last file" });
+    }
+    await File.findByIdAndDelete(req.params.fileId);
+    res.json({ message: "Deleted" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
