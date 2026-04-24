@@ -8,6 +8,7 @@ import Filetabs from "../components/FileTabs";
 import UserList from "../components/UserList";
 import Chat from "../components/Chat";
 import CursorOverlay from "../components/CursorOverlay";
+import OutputPanel from "../components/OutputPanel";
 import "./Room.css";
 
 export default function Room() {
@@ -231,34 +232,44 @@ const handleSave = useCallback(() => {
         </aside>
 
         {/* Editor + cursor overlay */}
-        <div className="room-editor-wrap" ref={containerRef}>
+
+      <div className="room-editor-wrap" ref={containerRef}>
+    {/* editor takes all space except output panel height */}
+         <div style={{ height: "calc(100% - 220px)", position: "relative" }}>
           <Editor
-            height="100%"
-            language={activeFile?.language || "javascript"}
-            theme="vs-dark"
-            onChange={handleCodeChange}
-            onMount={handleEditorMount}
-            options={{
-              fontSize: 14,
-              fontFamily: "'JetBrains Mono', monospace",
-              fontLigatures: true,
-              minimap: { enabled: false },   // minimap wastes space, disable it
-              scrollBeyondLastLine: false,
-              renderLineHighlight: "all",
-              cursorBlinking: "smooth",
-              cursorSmoothCaretAnimation: "on",
-              smoothScrolling: true,
-              padding: { top: 16, bottom: 16 },
-              lineNumbersMinChars: 3,
-            }}
-          />
-          <CursorOverlay
-            cursors={cursors}
-            editorRef={editorRef}
-            containerRef={containerRef}
-          />
+          height="100%"
+          language={activeFile?.language || "javascript"}
+          theme="vs-dark"
+          onChange={handleCodeChange}
+          onMount={handleEditorMount}
+          options={{
+          fontSize: 14,
+          fontFamily: "'JetBrains Mono', monospace",
+          fontLigatures: true,
+          minimap: { enabled: false },
+          scrollBeyondLastLine: false,
+          renderLineHighlight: "all",
+          cursorBlinking: "smooth",
+          cursorSmoothCaretAnimation: "on",
+          smoothScrolling: true,
+          padding: { top: 16, bottom: 16 },
+          lineNumbersMinChars: 3,
+        }}
+      />
+      <CursorOverlay
+        cursors={cursors}
+        editorRef={editorRef}
+        containerRef={containerRef}
+        />
+         </div>
+
+        {/* output panel fixed below editor */}
+        <OutputPanel
+      code={editorRef.current?.getValue()}
+          language={activeFile?.language || "javascript"}
+        />
         </div>
       </div>
     </div>
   );
-}
+  } 
