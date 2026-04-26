@@ -220,6 +220,8 @@ const handleSave = useCallback(() => {
         files={files}
         activeFile={activeFile}
         onSwitch={handleFileSwitch}
+        roomId={roomId}
+        onFilesChange={setFiles}
       />
 
       {/* Main editor area */}
