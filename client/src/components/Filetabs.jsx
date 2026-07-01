@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import axios from "axios";
+import socket from "../socket";
 import "./FileTabs.css";
 
 const LANG_COLORS = {
@@ -24,8 +25,9 @@ export default function FileTabs({ files, activeFile, onSwitch, roomId, onFilesC
       const { data } = await axios.post(`/api/rooms/${roomId}/files`, {
         name: newName.trim(),
       });
-      onFilesChange([...files, data]); // update parent state
-      onSwitch(data);                  // switch to new file
+      onFilesChange([...files, data]);
+      onSwitch(data);
+      socket.emit("file:created", { roomId, file: data });
       setNewName("");
       setAdding(false);
     } catch (err) {

@@ -32,7 +32,7 @@ export default function Home() {
     e.preventDefault();
     setError("");
     try {
-      const { data } = await axios.post("/api/rooms/join", { shareCode: joinCode });
+      const { data } = await axios.post("/api/rooms/join", { shareCode: joinCode.trim() });
       navigate(`/room/${data._id}`);
     } catch (err) {
       setError(err.response?.data?.message || "Room not found");
@@ -95,7 +95,7 @@ export default function Home() {
                 className="input"
                 placeholder="enter share code..."
                 value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.toLowerCase())}
+                onChange={(e) => setJoinCode(e.target.value)}
                 required
               />
               <button className="btn btn-primary">join →</button>

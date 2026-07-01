@@ -2,13 +2,14 @@ import { useState } from "react";
 import axios from "axios";
 import "./OutputPanel.css";
 
-export default function OutputPanel({ code, language }) {
+export default function OutputPanel({ getCode, language }) {
   const [output, setOutput] = useState(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
 
   const run = async () => {
-    if (!code?.trim()) return;
+    const code = getCode?.() || "";
+    if (!code.trim()) return;
     setRunning(true);
     setOutput(null);
     setError("");

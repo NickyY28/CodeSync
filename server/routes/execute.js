@@ -1,76 +1,80 @@
 const express = require("express");
+const vm = require("vm");
+const { spawn } = require("child_process");
 const router = express.Router();
 const protect = require("../middleware/authMiddleware");
 
-// language name → Judge0 language ID
-// full list at: https://ce.judge0.com/languages
-const LANGUAGE_IDS = {
-  javascript: 63,   // Node.js 12
-  python: 71,       // Python 3
-  cpp: 54,          // C++ 17
-  c: 50,            // C
-  java: 62,         // Java
-  typescript: 74,   // TypeScript
-  go: 60,           // Go
-  rust: 73,         // Rust
+const SUPPORTED = new Set(["javascript", "python"]);
+
+const runJavaScript = (code) => {
+  const logs = [];
+  const sandbox = {
+    console: {
+      log: (...args) => logs.push(args.map(String).join(" ")),
+      error: (...args) => logs.push(args.map(String).join(" ")),
+      warn: (...args) => logs.push(args.map(String).join(" ")),
+    },
+  };
+
+  try {
+    vm.runInNewContext(code, sandbox, { timeout: 5000 });
+    return { stdout: logs.join("\n"), stderr: "", status: "Accepted" };
+  } catch (err) {
+    return {
+      stdout: logs.join("\n"),
+      stderr: err.message,
+      status: "Runtime Error",
+    };
+  }
 };
+
+const runPython = (code) =>
+  new Promise((resolve) => {
+    const py = process.platform === "win32" ? "python" : "python3";
+    const proc = spawn(py, ["-c", code], { timeout: 5000 });
+    let stdout = "";
+    let stderr = "";
+
+    proc.stdout.on("data", (chunk) => { stdout += chunk; });
+    proc.stderr.on("data", (chunk) => { stderr += chunk; });
+    proc.on("error", (err) => {
+      resolve({
+        stdout: "",
+        stderr: err.code === "ENOENT"
+          ? "Python is not installed on the server"
+          : err.message,
+        status: "Runtime Error",
+      });
+    });
+    proc.on("close", (exitCode) => {
+      resolve({
+        stdout,
+        stderr,
+        status: exitCode === 0 ? "Accepted" : "Runtime Error",
+      });
+    });
+  });
 
 router.post("/", protect, async (req, res) => {
   const { code, language } = req.body;
 
-  const languageId = LANGUAGE_IDS[language];
-  if (!languageId) {
-    return res.status(400).json({ message: `Language "${language}" not supported for execution` });
+  if (!SUPPORTED.has(language)) {
+    return res.status(400).json({
+      message: `Language "${language}" is not supported for execution yet. Try JavaScript or Python.`,
+    });
   }
 
   try {
-    // Step 1 — Submit code to Judge0 (returns a token)
-    const submitRes = await fetch(`${process.env.JUDGE0_URL}/submissions?base64_encoded=false&wait=false`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-RapidAPI-Key": process.env.JUDGE0_API_KEY,
-        "X-RapidAPI-Host": "judge0-ce.p.rapidapi.com",
-      },
-      body: JSON.stringify({
-        source_code: code,
-        language_id: languageId,
-        stdin: "",           // no stdin input for now
-      }),
-    });
-
-    const { token } = await submitRes.json();
-    if (!token) return res.status(500).json({ message: "Submission failed" });
-
-    // Step 2 — Poll until execution finishes
-    // Judge0 is async — status 1 = queued, 2 = processing, 3+ = done
-    let result;
-    for (let i = 0; i < 10; i++) {
-      await new Promise((r) => setTimeout(r, 1000)); // wait 1s between polls
-
-      const pollRes = await fetch(
-        `${process.env.JUDGE0_URL}/submissions/${token}?base64_encoded=false`,
-        {
-          headers: {
-            "X-RapidAPI-Key": process.env.JUDGE0_API_KEY,
-            "X-RapidAPI-Host": "judge0-ce.p.rapidapi.com",
-          },
-        }
-      );
-      result = await pollRes.json();
-
-      // Status ID 3 = accepted, 4+ = error states — all mean execution is done
-      if (result.status?.id >= 3) break;
-    }
+    const result =
+      language === "javascript" ? runJavaScript(code) : await runPython(code);
 
     res.json({
       stdout: result.stdout || "",
-      stderr: result.stderr || result.compile_output || "",
-      status: result.status?.description || "Unknown",
-      time: result.time,       // execution time in seconds
-      memory: result.memory,   // memory used in KB
+      stderr: result.stderr || "",
+      status: result.status,
+      time: null,
+      memory: null,
     });
-
   } catch (err) {
     res.status(500).json({ message: "Execution failed", error: err.message });
   }

@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import "./CursorOverlay.css";
 
-// This component renders colored name tags over the Monaco editor
-// showing where each collaborator's cursor is in real time
-
-export default function CursorOverlay({ cursors, editorRef, containerRef }) {
+// Renders colored name tags for collaborators' cursors — never the local user.
+export default function CursorOverlay({
+  cursors,
+  editorRef,
+  containerRef,
+  ownSocketId,
+  ownUserId,
+}) {
   const [positions, setPositions] = useState({});
 
   useEffect(() => {
@@ -12,14 +16,14 @@ export default function CursorOverlay({ cursors, editorRef, containerRef }) {
 
     const editor = editorRef.current;
 
-    // Convert Monaco line/column positions to pixel coordinates
-    // Monaco exposes getScrolledVisiblePosition() for exactly this
     const recalculate = () => {
       const next = {};
       for (const [socketId, cursor] of Object.entries(cursors)) {
+        // Never show the local user's own remote cursor label
+        if (socketId === ownSocketId) continue;
+        if (ownUserId && cursor.userId === ownUserId) continue;
         if (!cursor.position) continue;
 
-        // getScrolledVisiblePosition gives px coords relative to the editor DOM
         const px = editor.getScrolledVisiblePosition({
           lineNumber: cursor.position.lineNumber,
           column: cursor.position.column,
@@ -38,10 +42,9 @@ export default function CursorOverlay({ cursors, editorRef, containerRef }) {
 
     recalculate();
 
-    // Recalculate on scroll — cursors need to move with the editor content
     const disposable = editor.onDidScrollChange(recalculate);
-    return () => disposable.dispose(); // Monaco uses .dispose() not removeListener
-  }, [cursors, editorRef.current]);
+    return () => disposable.dispose();
+  }, [cursors, editorRef, containerRef, ownSocketId, ownUserId]);
 
   return (
     <div className="cursor-overlay">
@@ -51,12 +54,10 @@ export default function CursorOverlay({ cursors, editorRef, containerRef }) {
           className="remote-cursor"
           style={{ top: cursor.top, left: cursor.left }}
         >
-          {/* The blinking line */}
           <div
             className="remote-cursor__line"
             style={{ background: cursor.color }}
           />
-          {/* The name tag above the cursor */}
           <div
             className="remote-cursor__label"
             style={{ background: cursor.color }}

@@ -32,13 +32,16 @@ router.post("/", async (req, res) => {
 
 // Join room by share code
 router.post("/join", async (req, res) => {
-  const { shareCode } = req.body;
+  const shareCode = (req.body.shareCode || "").trim();
   try {
-    const room = await Room.findOne({ shareCode });
+    const room = await Room.findOne({
+      shareCode: { $regex: new RegExp(`^${shareCode.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+    });
     if (!room) return res.status(404).json({ message: "Room not found" });
 
-    // Add user to members if not already in
-    if (!room.members.includes(req.user.id)) {
+    // Add user to members if not already in (compare as strings — JWT id is a string)
+    const memberIds = room.members.map(String);
+    if (!memberIds.includes(String(req.user.id))) {
       room.members.push(req.user.id);
       await room.save();
     }

@@ -21,24 +21,56 @@ const decodeToken = (token) => {
   }
 };
 
+const isTokenExpired = (token) => {
+  const decoded = decodeToken(token);
+  if (!decoded?.exp) return true;
+  return decoded.exp * 1000 < Date.now();
+};
+
+const clearStoredAuth = () => {
+  localStorage.removeItem("token");
+  delete axios.defaults.headers.common["Authorization"];
+};
+
+// Drop expired tokens before any request runs
+if (token && isTokenExpired(token)) {
+  clearStoredAuth();
+}
+
 export const AuthProvider = ({ children }) => {
-  // Initialize user synchronously too — no loading flicker
   const [user, setUser] = useState(() => {
     const t = localStorage.getItem("token");
-    return t ? decodeToken(t) : null;
+    if (!t || isTokenExpired(t)) {
+      if (t) clearStoredAuth();
+      return null;
+    }
+    return decodeToken(t);
   });
 
-  const login = (token) => {
-    localStorage.setItem("token", token);
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    setUser(decodeToken(token));
+  const login = (newToken) => {
+    localStorage.setItem("token", newToken);
+    axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+    setUser(decodeToken(newToken));
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
-    delete axios.defaults.headers.common["Authorization"];
+    clearStoredAuth();
     setUser(null);
   };
+
+  useEffect(() => {
+    const id = axios.interceptors.response.use(
+      (res) => res,
+      (err) => {
+        if (err.response?.status === 401) {
+          clearStoredAuth();
+          setUser(null);
+        }
+        return Promise.reject(err);
+      }
+    );
+    return () => axios.interceptors.response.eject(id);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
