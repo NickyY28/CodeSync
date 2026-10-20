@@ -1,8 +1,11 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 
+
+const baseURL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 const AuthContext = createContext();
-axios.defaults.baseURL = "http://localhost:5000";
+axios.defaults.baseURL = baseURL;
 
 // ── Run this SYNCHRONOUSLY at module load time ──────────
 // This executes before any component mounts or any useEffect fires

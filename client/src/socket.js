@@ -1,8 +1,9 @@
 import { io } from "socket.io-client";
 
 let activeRoomId = null;
+const baseURL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-const socket = io("http://localhost:5000", {
+const socket = io(baseURL, {
   autoConnect: false,
   reconnection: true,
   reconnectionAttempts: Infinity,
