@@ -2,13 +2,13 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import axios from "axios";
-import socket, { setActiveRoomId, leaveActiveRoom } from "../socket";
-import { useAuth } from "../context/AuthContext";
-import Filetabs from "../components/FileTabs";
-import UserList from "../components/UserList";
-import Chat from "../components/Chat";
-import CursorOverlay from "../components/CursorOverlay";
-import OutputPanel from "../components/OutputPanel";
+import socket, { setActiveRoomId, leaveActiveRoom } from "../socket.js";
+import { useAuth } from "../context/AuthContext.jsx";
+import Filetabs from "../components/FileTabs.jsx";
+import UserList from "../components/UserList.jsx";
+import Chat from "../components/Chat.jsx";
+import CursorOverlay from "../components/CursorOverlay.jsx";
+import OutputPanel from "../components/OutputPanel.jsx";
 import "./Room.css";
 
 export default function Room() {
