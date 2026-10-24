@@ -4,7 +4,7 @@ import Editor from "@monaco-editor/react";
 import axios from "axios";
 import socket, { setActiveRoomId, leaveActiveRoom } from "../socket.js";
 import { useAuth } from "../context/AuthContext.jsx";
-import Filetabs from "../components/FileTabs.jsx";
+import Filetabs from "../components/Filetabs.jsx";
 import UserList from "../components/UserList.jsx";
 import Chat from "../components/Chat.jsx";
 import CursorOverlay from "../components/CursorOverlay.jsx";
